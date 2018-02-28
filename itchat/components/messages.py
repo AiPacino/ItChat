@@ -22,6 +22,7 @@ def load_messages(core):
     core.send_video   = send_video
     core.send         = send
     core.revoke       = revoke
+    core.produce_msg  = produce_msg
 
 def get_download_fn(core, url, msgId):
     def download_fn(downloadDir=None):

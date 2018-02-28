@@ -9,13 +9,14 @@ except ImportError:
     from http.client import BadStatusLine
 
 import requests
+import datetime
 from pyqrcode import QRCode
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
 from ..storage.templates import wrap_user_dict
 from .contact import update_local_chatrooms, update_local_friends
-from .messages import produce_msg
+# from .messages import produce_msg
 
 logger = logging.getLogger('itchat')
 
@@ -26,6 +27,7 @@ def load_login(core):
     core.check_login       = check_login
     core.web_init          = web_init
     core.show_mobile_login = show_mobile_login
+    core.sync_check        = sync_check
     core.start_receiving   = start_receiving
     core.get_msg           = get_msg
     core.logout            = logout
@@ -241,10 +243,13 @@ def show_mobile_login(self):
 def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
     self.alive = True
     def maintain_loop():
+        def get_today():
+            return datetime.date.today()
+        today = get_today()
         retryCount = 0
         while self.alive:
             try:
-                i = sync_check(self)
+                i = self.sync_check()
                 if i is None:
                     self.alive = False
                 elif i == '0':
@@ -252,7 +257,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                 else:
                     msgList, contactList = self.get_msg()
                     if msgList:
-                        msgList = produce_msg(self, msgList)
+                        msgList = self.produce_msg(msgList)
                         for msg in msgList:
                             self.msgList.put(msg)
                     if contactList:
@@ -275,7 +280,11 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                 if self.receivingRetryCount < retryCount:
                     self.alive = False
                 else:
-                    time.sleep(1)
+                    time.sleep(3)
+            finally:
+                if get_today() > today:
+                    today = get_today()
+                    retryCount = 0
         self.logout()
         if hasattr(exitCallback, '__call__'):
             exitCallback()
@@ -316,7 +325,7 @@ def sync_check(self):
     regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
     pm = re.search(regx, r.text)
     if pm is None or pm.group(1) != '0':
-        logger.debug('Unexpected sync check result: %s' % r.text)
+        logger.error('Unexpected sync check result: %s' % r.text)
         return None
     return pm.group(2)
 

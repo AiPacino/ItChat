@@ -112,6 +112,10 @@ class Core(object):
             it is defined in components/login.py
         '''
         raise NotImplementedError()
+    def sync_check(self):
+        ''' sync_check
+        '''
+        raise NotImplementedError()
     def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
         ''' open a thread for heart loop and receiving messages
             for options:
@@ -132,6 +136,10 @@ class Core(object):
                     - or anytime they like
                 - synckey is updated with returned synccheckkey
             it is defined in components/login.py
+        '''
+        raise NotImplementedError()
+    def produce_msg(self, msgList):
+        ''' produce_msg
         '''
         raise NotImplementedError()
     def logout(self):
