@@ -342,7 +342,9 @@ def get_msg(self):
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, data=json.dumps(data), headers=headers, timeout=config.TIMEOUT)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
-    if dic['BaseResponse']['Ret'] != 0: return None, None
+    if dic['BaseResponse']['Ret'] != 0:
+        logger.error('Ret 0 Response: %s' % dic)
+        return None, None
     self.loginInfo['SyncKey'] = dic['SyncCheckKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
         for item in dic['SyncCheckKey']['List']])
